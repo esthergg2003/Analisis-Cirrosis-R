@@ -1,0 +1,638 @@
+---
+title: Análisis del desarrollo de la Cirrosis
+author: Carolina Iglesias, Esther García, y Macarena Cuen
+date: "27-11-2022"
+output:
+    rmdformats::robobook:
+      df_print: paged
+      highlight: tango
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, echo=FALSE, warning=FALSE, paged.print=FALSE}
+library(ggplot2)
+```
+
+Realizado por: Carolina Iglesias, Esther García, y Macarena Cuen
+
+# 1. INTRODUCCIÓN
+
+<div style="text-align: justify">
+
+Colangitis biliar primaria, también llamada cirrosis, es una enfermedad
+crónica autoinmune en la cual los conductos biliares del hígado se
+destruyen progresivamente.
+
+El bilis es un fluido, producido por el hígado, que contribuye en el
+proceso de la digestión, ocasiona la correcta absorción de vitaminas, e
+interviene en el desecho de colesterol, toxinas y glóbulos rojos
+desgastados. Una inflamación crónica en el hígado puede provocar daños
+en los conductos biliares, cicatrización irreversible en el tejido
+hepático (cirrosis) y finalmente, insuficiencia hepática.
+
+Aunque esta condición afecta a ambos sexos, la cirrosis suele ser más
+común en mujeres. Los investigadores creen que una combinación de
+factores genéticos y ambientales generan la enfermedad. Esta condición
+suele desarrollarse lentamente y puede ser tratada para retrasar su
+avance, pero hasta el día de hoy, no existe una cura para dicha
+enfermedad. En este trabajo esperamos encontrar relación entre los
+diferentes marcadores que contribuyen al diagnóstico de la enfermedad.
+
+<div/>
+
+![](cirrosis.png)
+
+```{r Cargar data, echo=FALSE}
+
+load(file='pbc.sav')
+#Cambiamos la variable del dataset para no alterar el original y aseguramos que los datos sean numericos
+data=pbc
+data$bili=as.numeric(data$bili)
+data$albumin=as.numeric(data$albumin)
+data$stage=as.numeric(data$stage)
+data$protime=as.numeric(data$protime)
+data$fu.days=as.numeric(data$fu.days)
+data$age=as.numeric(data$age)
+data$alk.phos=as.numeric(data$alk.phos)
+data$sgot=as.numeric(data$sgot)
+data$chol=as.numeric(data$chol)
+data$trig=as.numeric(data$trig)
+data$platelet=as.numeric(data$platelet)
+data$status=as.numeric(data$status)
+data$copper=as.numeric(data$copper)
+data$sex=as.character(data$sex)
+data$spiders=as.character(data$spiders)
+data$hepatom=as.character(data$hepatom)
+data$ascites=as.character(data$ascites)
+data$drug=as.character(data$drug)
+data$edema=as.character(data$edema)
+```
+
+# 2. SET DE DATOS
+
+<div style="text-align: justify">
+
+Para realizar un análisis sobre la enfermedad hemos utilizado un set de
+datos de la página web de hbiostat. La muestra está formada por 418
+personas y se evalúan 19 variables. Estas variables son las siguientes:
+
+| Variable | Descripción                                                                                                                                                                                                                                  |
+|------------------------------|-----------------------------------------|
+| bili     | variable tipo double que indica el nivel de bilirrubina en la sangre medido en mg/dl                                                                                                                                                         |
+| albumin  | variable tipo double que indica el nivel de albumina en la sangre medido en gm/dl                                                                                                                                                            |
+| stage    | variable tipo double que indica el grado de la enfermedad según el criterio Ludwig: siendo 1 el grado donde solamente hay presencia de tejido anormal e inflamación y 4 el grado de mayor gravedad de la enfermedad y existencia de cirrosis |
+| protime  | variable tipo double que indica el tiempo de protrombina en segundos. (Tiempo que tarda la sangre en coagular)                                                                                                                               |
+| sex      | variable tipo interger que indica si es hombre o mujer                                                                                                                                                                                       |
+| fu.days  | variable tipo double que indica el tiempo de vida restante hasta la muerte o trasplante de hígado                                                                                                                                            |
+| age      | variable tipo double que indica la edad del paciente en años                                                                                                                                                                                 |
+| spiders  | variable tipo interger que indica la existencia de angiomas aracniformes en la piel                                                                                                                                                          |
+| hepatom  | variable tipo interger que indica la presencia o ausencia de un tumor en el hígado                                                                                                                                                           |
+| ascites  | variable tipo interger que indica la presencia o ausencia de acumulación de líquido en el abdomen                                                                                                                                            |
+| alk.phos | variable tipo double que indica el nivel de fosfatasa alcalina en la sangre medido en U/litro                                                                                                                                                |
+| sgot     | variable tipo double que indica el nivel de la proteína SGOT en la sangre medido en U/ml. Dicha proteína se filtra en la sangre cuando las células del hígado se dañan, por lo que las personas con cirrosis tienden a tener altos niveles   |
+| chol     | variable tipo double que indica el nivel de colesterol en la sangre medido en mg/dl                                                                                                                                                          |
+| trig     | variable tipo double que indica el nivel de triglicéridos en la sangre medido en mg/dl                                                                                                                                                       |
+| platelet | variable tipo double que indica el nivel de plaquetas por cm\^3/1000                                                                                                                                                                         |
+| drug     | variable tipo interger que indica el tratamiento recibido: D-penicilina, placebo, no aleatoria                                                                                                                                               |
+| status   | variable tipo double que indica el estado del paciente tras hacer un seguimiento                                                                                                                                                             |
+| edema    | variable tipo interger que indica la presencia de edema en el paciente: ausente o presente                                                                                                                                                   |
+| copper   | variable tipo double que indica el nivel de cobre en la orina medido en ug/día                                                                                                                                                               |
+
+<div/>
+
+```{r data, echo=FALSE, paged.print=TRUE}
+
+
+data[1:10,]
+```
+
+<div style="text-align: justify">
+
+# 3. PREGUNTAS
+
+## 1. ¿Cómo varían las variables de nuestra data conforme avanza la enfermedad?
+
+Para identificar la etapa de la enfermedad en la que está el paciente,
+¿Qué valores de nuestra data set observamos que varían con el avance de
+la enfermedad?
+
+### 1.1 Nivel de cobre en la orina
+
+Para saber la relación del nivel de cobre con la cirrosis, planteamos:
+
+> **H~0~ (hipótesis nula)**: La media del nivel de cobre en la orina en
+> todas las fases es igual.
+
+> **H~1~ (hipótesis alternativa)**: La media del nivel de cobre en la
+> orina aumenta/disminuye conforme avanza la etapa de la enfermedad.
+
+<div/>
+
+```{r data2, echo=T, warning=FALSE}
+stage1=subset(data, stage=='1',)
+stage2=subset(data, stage=='2',)
+stage3=subset(data, stage=='3',)
+stage4=subset(data, stage=='4',)
+
+ggplot()+
+  geom_boxplot(stage1, mapping=aes(x=copper, y=stage), color="skyblue", alpha=0.6, outlier.color = "dodgerblue4")+
+  geom_boxplot(stage2, mapping=aes(x=copper, y=stage), color="indianred", alpha=0.6, outlier.color = "dodgerblue4")+
+  geom_boxplot(stage3, mapping=aes(x=copper, y=stage), color="palegreen3", alpha=0.6, outlier.color = "dodgerblue4")+
+  geom_boxplot(stage4, mapping=aes(x=copper, y=stage), color="sienna1", alpha=0.6, outlier.color = "dodgerblue4")
+
+
+```
+
+<div style="text-align: justify">
+
+Al ejecutar el código de los gráficos aparece una alerta que indica que
+se han excluido todas las filas en las cuales no había dato del paciente
+y en su lugar había "NA".
+
+Al graficar los datos se observa que estos muy probablemente no
+provienen de una distribución normal ya que contienen outliers. Por
+ello, hemos aplicado el Kruskal-Wallis test para identificar si existen
+diferencias significativas entre los niveles de cobre en la orina y la
+etapa de la enfermedad.
+
+<div/>
+
+```{r Print data3, echo=T, warning=FALSE}
+kruskal.test(copper~stage, data) 
+
+```
+
+<div style="text-align: justify">
+
+Observamos que el Kruskal test nos devuelve un p-value significativo por
+lo que aceptamos la hipótesis alternativa: conforme cambia la etapa de
+la enfermedad los niveles de cobre varían.
+
+Como observamos en el gráfico, mientras más avanzada está la enfermedad
+los niveles de cobre en la orina aumentan. Esto se debe a que conforme
+la enfermedad avanza, disminuye la capacidad del hígado de funcionar y
+producir bilis. El hígado secreta cobre a través de la bilis. Al
+disminuir el funcionamiento y producción de bilis, disminuye la
+capacidad del cuerpo de deshacerse del exceso de cobre del cuerpo. Por
+lo que el exceso de cobre se secreta a través de la orina y por ello
+surge un aumento en el nivel de cobre en la orina. Por ello, concluimos
+que el aumento de cobre en la orina es un posible indicador de la
+agravación de la enfermedad.
+
+### 1.2 Ascitis
+
+Realizamos un gráfico de barras para visulizar la presencia de ascitis
+en los pacientes, acumulación anormal de líquido en el abdomen.
+
+<div/>
+
+```{r Print data4, echo=T, warning=F}
+data2<-subset(data, ascites!="NA")
+g = ggplot(data2, aes(stage, fill=ascites)) 
+g+geom_bar(position="dodge") + scale_fill_manual(values = alpha(c("orange", "blue"), 1)) +
+  theme(axis.title.x = element_text(face="bold", size=10))  
+```
+
+<div style="text-align: justify">
+
+El gráfico de barras muestra que la presencia de ascitis se dispara para
+aquellos que están en la etapa de mayor gravedad.
+
+Planteamos un T-test en el que:
+
+> **H~0~ (hipótesis nula)**: La media del número de etapa de la
+> enfermedad es igual para pacientes con asicitis que sin ascitis.
+
+> **H~1~ (hipótesis alternativa)**: La media del número de etapa es
+> mayor en aquellos pacientes con ascitis.
+
+<div/>
+
+```{r Print data5, echo=T, warning=F}
+ascites=subset(data, ascites=='present',)
+no_ascites=subset(data, ascites=='absent',)
+t.test(ascites$stage,no_ascites$stage, var.equal = TRUE, alternative = "greater")
+```
+
+<div style="text-align: justify">
+
+Confirmamos nuestra hipótesis alternativa: los pacientes con ascitis se
+encuentran en etapas más avanzadas que los pacientes sin ascitis. Esta
+complicación suele ser muy frecuente cuando la enfermedad está avanzada
+e implica un empeoramiento drástico en el pronóstico del paciente.
+Tomando en cuenta que la causa más común de ascitis es la cirrosis,
+padecer ascitis, puede ser indicador de que el paciente se encuentra en
+la cuarta etapa, o cerca de llegar a ella.
+
+La ascitis es causada por niveles bajos de albumina, por lo que la
+albumina también puede servirnos de indicador. Observamos el p-value del
+Wilcox test y el Boxplot para confirmar que, en efecto, en los pacientes
+con ascitis el nivel de albumina es menor.
+
+<div/>
+
+```{r Print data6, echo=T, warning=F}
+ggplot()+
+  geom_boxplot(ascites, mapping=aes(x=ascites, y=albumin), color="darkgreen", alpha=.6)+
+  geom_boxplot(no_ascites, mapping=aes(x=ascites, y=albumin), color="sienna2", alpha=.6, outlier.color = "dodgerblue4")
+  
+wilcox.test(ascites$albumin,no_ascites$albumin)
+```
+
+<div style="text-align: justify">
+
+### 1.3 SGOT
+
+Continuamos analizando la proteina sgot en la sangre, teniendo en cuenta
+que una concentración alta de esta enzima puede ser un signo de que el
+hígado está lesionado, irritado o ejerciendo un funcionamiento
+deficiente.
+
+<div/>
+
+```{r Print data7, echo=T, warning=F}
+data3=data
+data3$stage=as.character(data3$stage)
+stage1=subset(data3, stage=='1',)
+stage4=subset(data3, stage=='4',)
+
+t.test(stage1$sgot,stage4$sgot)
+
+ggplot()+
+  geom_density(stage1, mapping=aes(x=sgot, group=stage, fill=stage), color="darkblue", alpha=0.5)+
+  geom_density(stage4, mapping=aes(x=sgot, group=stage, fill=stage), color="skyblue2", alpha=0.5)
+
+```
+
+<div style="text-align: justify">
+
+Vemos que los pacientes en una etapa más temprana de la enfermedad
+presentan niveles más bajos de SGOT (etapa 1), y analizando la etapa
+final (etapa 4), muchos pacientes presentan un aumento en la
+concentración de la enzima.
+
+Viendo los resultados del T-test también confirmamos que, en efecto, hay
+una diferencia significativa en las medias del sgot en sangre entre
+pacientes de la etapa 1 y la etapa 4, siendo la media mayor para
+pacientes en la etapa 4.
+
+Por lo que otro indicador de que la cirrosis está avanzando es el
+aumento en el nivel de SGOT en la sangre.
+
+### 1.4 Tiempo de protrombina
+
+El tiempo de protrombina es el tiempo que tarda la sangre en coagular
+(medida en segundos). Cuando el tiempo de protrombina es alto, la sangre
+tarda más tiempo en coagular. Esto usualmente sucede porque el hígado no
+está produciendo la cantidad adecuada de proteínas coagulantes, por lo
+que el proceso de coagulación tarda más tiempo. Por ello, nos planteamos
+que el aumento en el tiempo de protombina sea indicador de que el
+paciente está empeorando.
+
+<div/>
+
+```{r Print data8, echo=T, warning=F}
+stage1=subset(data, stage=='1',)
+stage2=subset(data, stage=='2',)
+stage3=subset(data, stage=='3',)
+stage4=subset(data, stage=='4',)
+
+
+ggplot()+
+  geom_boxplot(stage1, mapping=aes(x=stage, y=protime), color="skyblue", alpha=0.6, outlier.color = "dodgerblue4")+
+  geom_boxplot(stage2, mapping=aes(x=stage, y=protime), color="indianred", alpha=0.6, outlier.color = "dodgerblue4")+
+  geom_boxplot(stage3, mapping=aes(x=stage, y=protime), color="palegreen3", alpha=0.6, outlier.color = "dodgerblue4")+
+  geom_boxplot(stage4, mapping=aes(x=stage, y=protime), color="sienna1", alpha=0.6, outlier.color = "dodgerblue4")
+kruskal.test(protime~stage, data)
+```
+
+<div style="text-align: justify">
+
+Como podemos comprobar con el Kruskal-Wallis test, hay una significancia
+en la diferencia de medias de los tiempos de protrombina de cada fase.
+Un tiempo de protrombina alto usualmente es signo de grave daño en el
+hígado o cirrosis, lo confirmamos de igual manera observando el boxplot,
+y viendo como a medida que avanza la etapa de la enfermedad, hay más
+pacientes con tiempos de protrombina superiores a los de las etapas
+anteriores.
+
+## 2. ¿Existe alguna diferencia en la manifestación de la enfermedad entre hombres y mujeres?
+
+Según investigaciones, las mujeres son más propensas a desarrollar una
+cirrosis. Estadísticamente se ha podido comprobar que esta enfermedad es
+más común entre las mujeres. Por ello, en nuestra muestra, la mayoría de
+los pacientes son mujeres.
+
+Independientemente de esto, ¿en qué valores de nuestro dataset se puede
+identificar alguna relación o diferencia entre los dos sexos?
+
+### 2.1 Introduciendo el problema
+
+Primero separamos el dataset según género para poder analizar mejor los
+resultados, entre hombres y mujeres.
+
+<div/>
+
+```{r Print data9, echo=T, warning=F}
+female=subset(data, sex=='female',)
+male=subset(data, sex=='male',)
+```
+
+<div style="text-align: justify">
+
+Para poder crear y utilizar las siguientes gráficas, hemos tenido que
+descargar el paquete 'ggridges'.
+
+<div/>
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(ggridges)
+
+```
+
+<div style="text-align: justify">
+
+Para empezar vamos a coger los datos de los niveles de cobre,
+colesterol, trigliceridos, bilirubina, aspartato aminotransferasa(SGOT),
+y plaquetas. Creando unas gráficas separadas por género, y asi
+analizamos, a primera vista, las posibles diferencias con cada una de
+estas variables.
+
+<div/>
+
+```{r Print data10, echo=T, warning=F}
+
+cantidad=c(male$copper, male$chol, male$trig, male$bili, male$sgot, male$platelet)
+variables=c(rep('Cobre', length(male$copper)), rep('Cholesterol', length(male$chol)), 
+          rep('Trigliceridos', length(male$trig)), rep('Bilirubina', length(male$bili)), 
+          rep('Aspartato Aminotransferasa', length(male$sgot)), 
+          rep('Plaquetas', length(male$platelet)))
+genero=c(rep('Male', length(male$sex)))
+dfhombre=data.frame(cantidad, variables, genero)
+
+cantidad=c(female$copper, female$chol, female$trig, female$bili, female$sgot, female$platelet)
+variables=c(rep('Cobre', length(female$copper)), rep('Cholesterol', length(female$chol)), 
+          rep('Trigliceridos', length(female$trig)), rep('Bilirubina', length(female$bili)), 
+          rep('Aspartato Aminotransferasa', length(female$sgot)), 
+          rep('Plaquetas', length(female$platelet)))
+genero=c(rep('Female', length(female$sex)))
+dfmujer=data.frame(cantidad, variables, genero)
+
+dftodos=rbind(dfmujer, dfhombre)
+
+ggplot(dftodos, aes(x=cantidad, y=variables, fill=genero))+
+  geom_density_ridges(alpha=0.5)+
+  xlim(NA, 600)
+
+```
+
+<div style="text-align: justify">
+
+Este gráfico no se ve influido por el desequilibrio de mujeres y hombres
+en la muestra, ya que al ser funciones de densidad, indican la
+distribución de los datos de los hombres y mujeres en separado sin
+importar que hay más datos en un grupo que en el otro. Es probable que
+la información de los hombres no sea representativa por el tamaño tan
+pequeño del grupo masculino, pero por ello estamos corroborando todas
+las conclusiones de nuestra investigación con otras investigaciones e
+información de la comunidad científica.
+
+Como podemos observar en estos graficos, los hombres suelen tener
+mayores niveles de triglicéridos y cobre que las mujeres. Podemos decir,
+que se puede ver en el gráfico que los niveles de los hombres para cada
+elemento suelen estar mas distrubuidos. Sin embargo, según el gráfico,
+están mas concentrados en una area. En cambio, según la gráfica, parece
+que el nivel de bilirrubina se distribuye exactamente igual en los
+hombres y en las mujeres.
+
+Ahora vamos a analizar en casos más concretos donde no es tan fácil
+visualizar una\
+diferencia considerable con una densidad general de todos los datos.
+
+### 2.2 Nivel de plaquetas segun género y tratamiento
+
+Aunque no se vea tan claro con el gráfico de densidad sabemos, despues
+de investigar, que en hombres los niveles de plaquetas suelen ser
+menores que en mujeres. En nuestro caso, más concretamente, esto se
+cumple dentro de los pacientes que estan recibiendo el tratamiento de
+D-penicillamine.
+
+<div/>
+
+```{r Print data11, echo=T, warning=F}
+penicilina=data[data$drug=="D-penicillamine",]
+ggplot(penicilina, mapping=aes(x=sex, y=platelet, fill=sex, color=sex))+
+  geom_boxplot(alpha=0.5)
+```
+
+<div style="text-align: justify">
+
+Pero se cumple también con toda la muestra en general,
+independientemente del tratamiento que están recibiendo.
+
+<div/>
+
+```{r Print data12, echo=T, warning=F}
+ggplot(data, mapping=aes(x=sex, y=platelet, fill=sex, color=sex))+
+  geom_boxplot(alpha=0.5, outlier.color="darkmagenta", outlier.size = 2.5)
+```
+
+<div style="text-align: justify">
+
+En este boxplot se puede ver, que al tener en cuenta todos los datos de
+la muestra hay algunos outliers, como es de esperar al estar analizando
+tantos datos. En los dos boxplots se ve claramente que las mujeres
+tienen niveles mayores de plaquetas.
+
+### 2.3 Edema y Bilirubina
+
+En el gráfico de densidad identificamos que la bilirrubina se distribuye
+de igual manera en los hombres que en las mujeres. Siendo una variable
+en la que nos podemos enfocar para comparar los datos mejor,
+utilizaremos la variable edema para encontrar esta diferencia.
+
+La variable "edema" se refiere a los pacientes que tienen las piernas
+hinchadas a causa de la enfermedad, esto suele darse mayoritariamente en
+los pacientes con la enfermedad bastante avanzada. Al tomar los
+pacientes con edema de nuestra muestra, las mujeres tienen niveles de
+bilirrubina más altos que los hombres. Este suceso es contrario a lo que
+suele suceder en personas sanas, ya que los hombres suelen tener niveles
+de bilirrubina más altos que las mujeres.
+
+Primero nos descargamos el paquete 'data.table', para poder escoger
+correctamente los distintos datos que tiene la variable edema y
+clasificar por categorías.
+
+<div/>
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(data.table)
+```
+
+```{r Print data13, echo=T, warning=F}
+noedema=male[male$edema %like% "no edema", ]
+edemath=male[male$edema %like% "despite diuretic", ]
+edemanth=male[male$edema %like% "no diuretic", ]
+
+
+ggplot()+
+  geom_boxplot(noedema, mapping=aes(x=edema, y=bili), color="darkgreen", alpha=0.6, 
+               outlier.color="darkmagenta", outlier.size = 2.5)+
+  geom_boxplot(edemath, mapping=aes(x=edema, y=bili), color="indianred", alpha=0.6, 
+               outlier.color="darkmagenta", outlier.size = 2.5)+
+  geom_boxplot(edemanth, mapping=aes(x=edema, y=bili), color="royalblue3", alpha=0.6, 
+               outlier.color="darkmagenta", outlier.size = 2.5)
+```
+
+<div style="text-align: justify">
+
+Para analizar la gráfica hay que tener en cuenta que la mayoría de los
+pacientes hombres no tienen edema. Primero, con estos boxplots
+confirmamos que los hombres que no tienen edema tienen niveles de
+bilirubina más altos que los hombres que tienen edema, sin o con terapía
+diurética.
+
+Ahora creamos el boxplot para la mujeres para ver como se distribuyen
+según el edema y la bilirubina.
+
+<div/>
+
+```{r Print data14, echo=T, warning=F}
+
+noedemaf=female[female$edema %like% "no edema", ]
+outlier=which(noedemaf$bili>10)
+noedemaf=noedemaf[-outlier,]
+edemathf=female[female$edema %like% "despite diuretic", ]
+edemanthf=female[female$edema %like% "no diuretic", ]
+
+ggplot()+
+  geom_boxplot(noedemaf, mapping=aes(x=edema, y=bili), color="darkgreen", alpha=0.6, 
+               outlier.color="darkmagenta", outlier.size = 2.5)+
+  geom_boxplot(edemathf, mapping=aes(x=edema, y=bili), color="indianred", alpha=0.6, 
+               outlier.color="darkmagenta", outlier.size = 2.5)+
+  geom_boxplot(edemanthf, mapping=aes(x=edema, y=bili), color="royalblue3", alpha=0.6, 
+               outlier.color="darkmagenta", outlier.size = 2.5)
+
+```
+
+<div style="text-align: justify">
+
+En estos boxplots de las mujeres, hemos tenido que quitar algunos
+outliers de la categoría de no edema, ya que al final no aportan al
+resultado. Sabemos que al haber más pacientes sin edema habría más
+outliers.
+
+Aquí, al contrario que los hombres, se puede ver claramente que las
+mujeres tienen, con gran diferencia, niveles de bilirubina altos cuando
+tienen edema, especialmente con terapía diurética. Las gráficas de de
+las mujeres muestran resultados contrarios a los que se reflejan en las
+gráficas de los hombres.
+
+## 3. ¿Podríamos predecir el tiempo de vida restante del paciente con las variables proporcionadas en el data set?
+
+<div/>
+```{r Print data15, results=F, warning=F}
+library(MASS)
+misubset <- data
+to_remove <- which(is.na(misubset),arr.ind = TRUE)
+files_a_eleminiar <- unique(to_remove)
+data3 <- misubset[-files_a_eleminiar,]
+model=lm(fu.days~., data=data3)
+summary(model)
+modelAIC=stepAIC(model, direction="backward")
+
+```
+<div style="text-align: justify">
+
+Con ayuda de la función stepAIC seleccionamos las variables que tienen una mayor
+influencia en la predicción de los días restantes de vida de los
+pacientes. Pero para poder aplicar la función stepAIC correctamente tuvimos que excluir aquellos datos que contenían NA's (not available). 
+
+<div/>
+
+```{r Print data16, echo=T, warning=F}
+
+model2=lm(fu.days~bili+albumin+protime+stage+alk.phos+status+copper, data=data)
+summary(model2)
+```
+
+<div style="text-align: justify">
+
+Hicimos un modelo lineal para predecir los días de vida
+restantes "fu.days" con algunas variables y conseguimos un R cuadrado de
+0.4313, lo que indica que el 43% de la variabilidad de "fu.days" se debe
+a estas variables.
+
+Con este modelo intentamos predecir el tiempo de vida restante en días
+de un paciente. Hemos tomado los datos de un paciente de nuestro data
+set que tenía 400 días de vida restantes en fu.days.
+
+<div/>
+
+```{r Print data17, echo=T, warning=F}
+paciente1<-matrix(c(14.3, 2.6, 12.2, 4, 1718, 1, 156),nrow=1,byrow=F)
+colnames(paciente1)<-c("bili","albumin","protime","stage","alk.phos","status","copper")
+paciente1=as.data.frame(paciente1)
+predict(model2, paciente1, interval="confidence", level = 0.95) #mean
+predict(model2, paciente1, interval="prediction", level = 0.95) #estimation
+```
+
+<div style="text-align: justify">
+
+Observamos que los 400 días de vida restante del paciente se encuentran
+dentro del intervalo de confianza de la media y de la estimación. Aún
+así consideramos la posibilidad de mejorar el modelo para poder predecir
+mejor, y por ello desarrollamos otro modelo lineal con el objetivo de
+maximizar el R cuadrado.
+
+<div/>
+
+```{r Print data18, echo=T, warning=F}
+model3=lm(fu.days~.*.,data=data)
+a=summary(model3)
+a$r.squared
+```
+
+<div style="text-align: justify">
+
+Es evidente que este modelo tiene un mayor R cuadrado, por lo que sería
+más acertado al predecir.
+
+A pesar de ser un modelo más acertado, es verdad que hay que
+proporcionarle una mayor cantidad de datos, ya que toma como variables
+la multiplicación entre los diferentes valores. Por ello, no hemos
+podido hacer predicciones con este nuevo modelo.
+
+# 4. CONCLUSIONES
+
+Por medio de este trabajo hemos podido explorar múltiples correlaciones
+entre las diferentes variables del dataset. Hemos podido ver como
+algunas de las variables seguían un determinado comportamiento conforme
+variaba la etapa de la enfermedad y podían funcionar como indicadores
+del desarrollo o avance de la enfermedad.
+
+Por un lado, el nivel de cobre en la orina, nivel de proteína SGOT en la
+sangre y el tiempo de protrombina son variables que suelen aumentar con
+el progreso de la enfermedad. Así también, la presencia de ascitis y un
+nivel bajo de albumina son más comunes en pacientes en etapas más
+avanzadas.
+
+Por otro lado, en lo referente a las variables que se comportan de
+manera diferente en hombres y en mujeres sobresalen los triglicéridos y
+cobre, ya que los hombres suelen tener mayores niveles de triglicéridos
+y cobre que las mujeres. Luego hemos concluido que se cumple que las
+mujeres tienen niveles de plaquetas más altos que los hombres. Al tomar
+en cuenta la variable edema vemos que su presencia afecta los niveles de
+bilirubina en los pacientes: en las mujeres hace que aumente, y en los
+hombres disminuye.
+
+Por ultimo, hemos creado un modelo lineal que predice el tiempo de vida
+restante del paciente con variables de nuestro data set.
+
+<div/>
