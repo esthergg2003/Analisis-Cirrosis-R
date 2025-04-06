@@ -1,2 +1,5 @@
 # Analisis-Cirrosis-R
-Estudio de factores que afectan el desarrollo de la cirrosis hepática utilizando R.
+
+Este proyecto fue realizado como parte de la asignatura de Análisis de Datos. En él, analizamos varios factores que podrían influir en el desarrollo de la cirrosis hepática, como el tratamiento recibido por los pacientes, la presencia de edema (ausente o presente), el nivel de cobre en la orina (medido en μg/día), entre otros. Este análisis busca entender cómo estos factores afectan la evolución de la enfermedad, lo que podría ser útil para mejorar el diagnóstico y tratamiento de los pacientes.
+
+A lo largo del trabajo, planteamos una serie de preguntas que guiaron el análisis realizado: ¿Cómo varían las variables de nuestro dataset conforme avanza la enfermedad?, ¿Existe alguna diferencia en la manifestación de la enfermedad entre hombres y mujeres? y ¿Es posible predecir el tiempo de vida restante de un paciente con cirrosis utilizando las variables del dataset?. Estas preguntas fueron respondidas a medida que analizamos y graficamos diferentes variables de nuestro conjunto de datos.
